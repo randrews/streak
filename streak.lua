@@ -44,6 +44,16 @@ function hex_encode(str)
     return encoded
 end
 
+function reset(sOut, sIn, value)
+    if value then
+        sOut:write('resethigh\r\n')
+    else
+        sOut:write('resetlow\r\n')
+    end
+    sOut:flush()
+    read_serial(sIn)
+end
+
 --------------------------------------------------
 
 local params = parse_params(...)
@@ -58,19 +68,25 @@ local sIn = io.open(device, 'r')
 local sOut = io.open(device, 'w')
 
 if params.command == 'status' then
+    reset(sOut, sIn, false)
     sOut:write('status\r\n')
     sOut:flush()
     print(read_serial(sIn))
+    reset(sOut, sIn, true)
 
 elseif params.command == 'id' then
+    reset(sOut, sIn, false)
     sOut:write('id\r\n')
     sOut:flush()
     print(read_serial(sIn))
+    reset(sOut, sIn, true)
 
 elseif params.command == 'erase' then
+    reset(sOut, sIn, false)
     sOut:write('erase\r\n')
     sOut:flush()
     print(read_serial(sIn))
+    reset(sOut, sIn, true)
 
 elseif params.command == 'write' then
     local file = params['f'] or params['--file']
@@ -79,6 +95,7 @@ elseif params.command == 'write' then
         os.exit(1)
     end
     local infile = io.open(file, 'r')
+    reset(sOut, sIn, false)
     sOut:write('@000000\r\n')
     print(read_serial(sIn))
     while true do
@@ -88,6 +105,7 @@ elseif params.command == 'write' then
         sOut:flush()
         print(read_serial(sIn))
     end
+    reset(sOut, sIn, true)
 end
 
 os.exit(0)

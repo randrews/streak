@@ -59,8 +59,14 @@ void loop() {
     if(command == "status") statusCommand();
     if(command == "erase") eraseCommand();
     if(command == "read") readCommand();
+    if(command == "resethigh") resetCommand(true);
+    if(command == "resetlow") resetCommand(false);
     command = "";
   }
+}
+
+void resetCommand(boolean value) {
+  value ? rstHigh() : rstLow();
 }
 
 void readCommand() {
@@ -254,6 +260,14 @@ void csLow() {
 
 void csHigh() {
   DDRD &= 0b01111111; // Chip select high
+}
+
+void rstLow() {
+  DDRD |= 0b01000000; // Reset low
+}
+
+void rstHigh() {
+  DDRD &= 0b10111111; // Reset high
 }
 
 byte spiSend(byte si) {
