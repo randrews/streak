@@ -13,13 +13,13 @@ function parse_params(...)
 
     local valid_commands = {
         read = true, write = true, erase = true,
-        id = true, status = true
+        id = true, status = true, reset = true
     }
 
     if #{...} == 0 or not valid_commands[params.command] then
         local usage = "Usage: streak <command> [options...]\n"
         usage = usage .. "\t-d, --device: serial device\n"
-        usage = usage .. "\tCommands are read, write, erase, id, status"
+        usage = usage .. "\tCommands are read, write, erase, id, status, reset"
         return { error = usage }
     end
 
@@ -68,11 +68,9 @@ local sIn = io.open(device, 'r')
 local sOut = io.open(device, 'w')
 
 if params.command == 'status' then
-    reset(sOut, sIn, false)
     sOut:write('status\r\n')
     sOut:flush()
     print(read_serial(sIn))
-    reset(sOut, sIn, true)
 
 elseif params.command == 'id' then
     reset(sOut, sIn, false)
@@ -96,15 +94,22 @@ elseif params.command == 'write' then
     end
     local infile = io.open(file, 'r')
     reset(sOut, sIn, false)
+    sOut:write('erase\r\n')
+    sOut:flush()
+    print(read_serial(sIn))
     sOut:write('@000000\r\n')
     print(read_serial(sIn))
     while true do
-        local str = infile:read(128)
+        local str = infile:read(256)
         if not str then break end
         sOut:write('=' .. hex_encode(str) .. '\r\n')
         sOut:flush()
         print(read_serial(sIn))
     end
+    reset(sOut, sIn, true)
+elseif params.command == 'reset' then
+    reset(sOut, sIn, false)
+    print('Device reset')
     reset(sOut, sIn, true)
 end
 

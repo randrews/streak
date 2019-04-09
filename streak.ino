@@ -67,6 +67,7 @@ void loop() {
 
 void resetCommand(boolean value) {
   value ? rstHigh() : rstLow();
+  Serial.println("OK");
 }
 
 void readCommand() {
