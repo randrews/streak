@@ -51,16 +51,17 @@ void loop() {
     command += ch;
   }
 
-  if(ch == 13) {
+  if(ch == 13 || ch == 10) {
     if(command.startsWith("@")) setAddressCommand(command);
-    if(command.startsWith("+")) setSizeCommand(command);
-    if(command.startsWith("=")) writeCommand(command);
-    if(command == "id") idCommand();
-    if(command == "status") statusCommand();
-    if(command == "erase") eraseCommand();
-    if(command == "read") readCommand();
-    if(command == "resethigh") resetCommand(true);
-    if(command == "resetlow") resetCommand(false);
+    else if(command.startsWith("+")) setSizeCommand(command);
+    else if(command.startsWith("=")) writeCommand(command);
+    else if(command == "id") idCommand();
+    else if(command == "status") statusCommand();
+    else if(command == "erase") eraseCommand();
+    else if(command == "read") readCommand();
+    else if(command == "resethigh") resetCommand(true);
+    else if(command == "resetlow") resetCommand(false);
+    else { Serial.println("unrecognized"); }
     command = "";
   }
 }

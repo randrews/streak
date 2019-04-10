@@ -54,6 +54,26 @@ function reset(sOut, sIn, value)
     read_serial(sIn)
 end
 
+function send_command(sIn, sOut, command)
+    sOut:write(command .. '\r\n')
+    sOut:flush()
+    local response = nil
+    while response == nil or response == 'unrecognized' do
+        response = read_serial(sIn)
+    end
+    return response
+end
+
+function spinner(count)
+    if count > 0 then
+        io.write('\b')
+    end
+    count = count + 1
+    local chars = { '|', '/', '-', '\\' }
+    io.write(chars[count % 4 + 1])
+    return count
+end
+
 --------------------------------------------------
 
 local params = parse_params(...)
@@ -68,22 +88,16 @@ local sIn = io.open(device, 'r')
 local sOut = io.open(device, 'w')
 
 if params.command == 'status' then
-    sOut:write('status\r\n')
-    sOut:flush()
-    print(read_serial(sIn))
+    print(send_command(sIn, sOut, 'status'))
 
 elseif params.command == 'id' then
     reset(sOut, sIn, false)
-    sOut:write('id\r\n')
-    sOut:flush()
-    print(read_serial(sIn))
+    print(send_command(sIn, sOut, 'id'))
     reset(sOut, sIn, true)
 
 elseif params.command == 'erase' then
     reset(sOut, sIn, false)
-    sOut:write('erase\r\n')
-    sOut:flush()
-    print(read_serial(sIn))
+    print(send_command(sIn, sOut, 'erase'))
     reset(sOut, sIn, true)
 
 elseif params.command == 'write' then
@@ -94,19 +108,18 @@ elseif params.command == 'write' then
     end
     local infile = io.open(file, 'r')
     reset(sOut, sIn, false)
-    sOut:write('erase\r\n')
-    sOut:flush()
-    print(read_serial(sIn))
-    sOut:write('@000000\r\n')
-    print(read_serial(sIn))
+    send_command(sIn, sOut, 'erase')
+    send_command(sIn, sOut, '@000000')
+    chunk = 0
     while true do
         local str = infile:read(256)
         if not str then break end
-        sOut:write('=' .. hex_encode(str) .. '\r\n')
-        sOut:flush()
-        print(read_serial(sIn))
+        send_command(sIn, sOut, '=' .. hex_encode(str))
+        chunk = spinner(chunk)
     end
+    if chunk > 0 then io.write('\b') end
     reset(sOut, sIn, true)
+
 elseif params.command == 'reset' then
     reset(sOut, sIn, false)
     print('Device reset')
