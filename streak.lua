@@ -107,6 +107,10 @@ elseif params.command == 'write' then
         os.exit(1)
     end
     local infile = io.open(file, 'r')
+    if infile == nil then
+        print('File not found: ' .. file)
+        os.exit(1)
+    end
     reset(sOut, sIn, false)
     send_command(sIn, sOut, 'erase')
     send_command(sIn, sOut, '@000000')
