@@ -1,5 +1,7 @@
 #!/usr/local/bin/lua
 
+local device
+
 function parse_params(...)
     local key = nil
     local params = {}
@@ -46,19 +48,17 @@ end
 
 function reset(sOut, sIn, value)
     if value then
-        sOut:write('resethigh\r\n')
+        send_command(sIn, sOut, 'resethigh')
     else
-        sOut:write('resetlow\r\n')
+        send_command(sIn, sOut, 'resetlow')
     end
-    sOut:flush()
-    read_serial(sIn)
 end
 
 function send_command(sIn, sOut, command)
-    sOut:write(command .. '\r\n')
+    sOut:write(command .. ';')
     sOut:flush()
     local response = nil
-    while response == nil or response == 'unrecognized' do
+    while response == nil or response:sub(1,5) == 'unrec' do
         response = read_serial(sIn)
     end
     return response
@@ -66,10 +66,10 @@ end
 
 function spinner(count)
     if count > 0 then
-        io.write('\b')
+        io.write('\b\b')
     end
     count = count + 1
-    local chars = { '|', '/', '-', '\\' }
+    local chars = { '| ', '/ ', '- ', '\\ ' }
     io.write(chars[count % 4 + 1])
     return count
 end
@@ -83,7 +83,8 @@ if params.error then
     os.exit(1)
 end
 
-local device = params['-d'] or params['--device'] or '/dev/ttyACM0'
+device = params['-d'] or params['--device'] or '/dev/ttyACM0'
+os.execute('stty -F ' .. device .. ' 9600 raw -echo')
 local sIn = io.open(device, 'r')
 local sOut = io.open(device, 'w')
 
@@ -121,7 +122,7 @@ elseif params.command == 'write' then
         send_command(sIn, sOut, '=' .. hex_encode(str))
         chunk = spinner(chunk)
     end
-    if chunk > 0 then io.write('\b') end
+    print('Done!')
     reset(sOut, sIn, true)
 
 elseif params.command == 'reset' then
@@ -130,4 +131,5 @@ elseif params.command == 'reset' then
     reset(sOut, sIn, true)
 end
 
-os.exit(0)
+sOut:close()
+sIn:close()

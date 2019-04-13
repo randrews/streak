@@ -33,7 +33,7 @@ void setup() {
   PORTD &= 0b00111111; // Set low level. Last time we touch PORTD
   DDRD &= 0b00111111;  // Set inputs / HighZ
 
-  command = "";
+  command.reserve(512);
   address[0] = 0;
   address[1] = 0;
   address[2] = 0;
@@ -44,14 +44,11 @@ void setup() {
 }
 
 void loop() {
-  char ch;
-  while(Serial.available()) {
-    ch = Serial.read();
-    if(ch == 13 || ch == 10) break; // Newline
-    command += ch;
-  }
+  if(Serial.available()) {
+    command += Serial.readStringUntil(';');
+    command.trim();
+    delay(10);
 
-  if(ch == 13 || ch == 10) {
     if(command.startsWith("@")) setAddressCommand(command);
     else if(command.startsWith("+")) setSizeCommand(command);
     else if(command.startsWith("=")) writeCommand(command);
@@ -61,8 +58,8 @@ void loop() {
     else if(command == "read") readCommand();
     else if(command == "resethigh") resetCommand(true);
     else if(command == "resetlow") resetCommand(false);
-    else { Serial.println("unrecognized"); }
-    command = "";
+    else { Serial.println("unrecognized: " + command); }
+    command.remove(0);
   }
 }
 
