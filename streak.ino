@@ -77,8 +77,9 @@ void readCommand() {
   spiSend(0x00);
   for(int n = 0; n < length; n++) {
     printByte(spiSend(0x00));
-    Serial.println("");
+    Serial.print(" ");
   }
+  Serial.println("");
   csHigh();
 }
 

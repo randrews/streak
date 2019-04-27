@@ -129,6 +129,13 @@ elseif params.command == 'reset' then
     reset(sOut, sIn, false)
     print('Device reset')
     reset(sOut, sIn, true)
+
+elseif params.command == 'read' then
+    reset(sOut, sIn, false)
+    send_command(sIn, sOut, '@000000')
+    send_command(sIn, sOut, '+16')
+    print(send_command(sIn, sOut, 'read'))
+    reset(sOut, sIn, true)
 end
 
 sOut:close()
